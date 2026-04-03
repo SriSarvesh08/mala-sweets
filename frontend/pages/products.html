@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Products — Mala Sweets and Ghee</title>
+  <meta name="description" content="Buy 100% pure homemade cow ghee, laddu, mysurpak and muruku. Mala Sweets and Ghee — traditional taste you trust." />
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    .filter-bar { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 32px; background: #fff; padding: 18px; border-radius: 14px; box-shadow: 0 4px 12px var(--shadow); align-items: center; }
+    .search-box { flex: 1; min-width: 200px; position: relative; }
+    .search-box input { width: 100%; padding: 10px 16px; padding-left: 40px; border: 1.5px solid var(--border); border-radius: 10px; font-size: .95rem; }
+    .search-box::before { content: '🔍'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--text-muted); }
+    .sort-box select { padding: 10px 16px; border: 1.5px solid var(--border); border-radius: 10px; background: #fff; color: var(--brown); font-weight: 600; cursor: pointer; }
+    .product-stock { font-size: .75rem; font-weight: 700; margin-bottom: 6px; }
+    .stock-in { color: var(--success); }
+    .stock-low { color: #f39c12; }
+    .stock-out { color: var(--error); }
+  </style>
+</head>
+<body>
+  <script src="/js/utils.js"></script>
+  <script src="/js/navbar.js"></script>
+
+  <section style="padding:40px 5% 72px;">
+    <div class="section-header" style="margin-bottom: 32px;">
+      <span class="section-label">Our Collection</span>
+      <h2 class="section-title">All Ghee Products</h2>
+      <p class="section-sub">Pure, fresh, and delivered right from our home to yours.</p>
+    </div>
+
+    <!-- Filter Bar -->
+    <div class="filter-bar">
+      <div class="search-box">
+        <input type="text" id="searchInput" placeholder="Search by name..." oninput="handleFilter()" />
+      </div>
+      <div class="sort-box">
+        <select id="sortSelect" onchange="handleFilter()">
+          <option value="newest">Newest First</option>
+          <option value="low-high">Price: Low to High</option>
+          <option value="high-low">Price: High to Low</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="products-grid" id="productsGrid">
+      <div style="text-align:center;width:100%;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+    </div>
+  </section>
+
+  <script>
+    let rawProducts = [];
+
+    async function loadProducts() {
+      try {
+        const data = await apiFetch('/products');
+        rawProducts = data.products;
+        handleFilter(); // Initial render
+      } catch (e) {
+        document.getElementById('productsGrid').innerHTML = `
+          <div class="empty-state">
+            <div class="emoji">⚠️</div>
+            <p>Could not load products. Is the backend running?<br/><small style="color:var(--error);">${e.message}</small></p>
+          </div>`;
+      }
+    }
+
+    function handleFilter() {
+      const search = document.getElementById('searchInput').value.toLowerCase();
+      const sort = document.getElementById('sortSelect').value;
+      const grid = document.getElementById('productsGrid');
+
+      let filtered = rawProducts.filter(p => p.name.toLowerCase().includes(search));
+
+      // Sorting
+      if (sort === 'low-high') filtered.sort((a,b) => a.price - b.price);
+      else if (sort === 'high-low') filtered.sort((a,b) => b.price - a.price);
+      else filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+      if (!filtered.length) {
+        grid.innerHTML = '<div class="empty-state"><div class="emoji">🧈</div><p>No products found matching your criteria.</p></div>';
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => {
+        const id = p._id;
+        return `
+        <div class="product-card" id="card-${id}">
+          <div class="product-img-wrap">
+            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=600&q=80'}" alt="${p.name}" loading="lazy" />
+            ${p.featured ? '<span class="product-badge">⭐ Popular</span>' : ''}
+            ${p.stock <= 0 ? '<div class="out-of-stock-overlay">Out of Stock</div>' : ''}
+          </div>
+          <div class="product-body">
+            <div class="product-stock ${p.stock > 10 ? 'stock-in' : (p.stock > 0 ? 'stock-low' : 'stock-out')}">
+              ● ${p.stock > 10 ? 'Available' : (p.stock > 0 ? `Only ${p.stock} left` : 'Out of Stock')}
+            </div>
+            <h3>${p.name}</h3>
+            <p>${p.description}</p>
+            
+            <div class="weight-selector" style="margin: 12px 0;">
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--brown); display: block; margin-bottom: 4px;">Select Weight:</label>
+              <select onchange="changeWeight('${id}', this.value, ${p.price})" style="width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit;">
+                <option value="1kg">1 Kg</option>
+                <option value="500g">500 g</option>
+                <option value="250g">250 g</option>
+              </select>
+            </div>
+
+            <div class="product-footer" style="display: flex; flex-direction: column; gap: 10px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <span class="product-price" id="price-${id}">₹${p.price}</span>
+              </div>
+              <div style="display:grid;grid-template-columns: 1fr 1fr; gap: 8px; width: 100%;">
+                <button class="btn btn-outline btn-sm" style="color: var(--brown); border-color: var(--brown); font-weight: 700;" ${p.stock <= 0 ? 'disabled' : ''} onclick="addToCartWithWeight('${id}')">
+                   Add to Cart
+                </button>
+                <button class="btn btn-primary btn-sm" style="font-weight: 700; background: var(--gold-dark); border-color: var(--gold-dark);" ${p.stock <= 0 ? 'disabled' : ''} onclick="buyNow('${id}')">
+                   Buy Now
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      `;}).join('');
+    }
+
+    function changeWeight(id, weight, basePrice) {
+      const priceEl = document.getElementById(`price-${id}`);
+      let newPrice = basePrice;
+      if (weight === '500g') newPrice = Math.round(basePrice * 0.5);
+      if (weight === '250g') newPrice = Math.round(basePrice * 0.25);
+      priceEl.innerText = `₹${newPrice}`;
+    }
+
+    function getSelectedProductData(id) {
+      const product = rawProducts.find(p => p._id === id);
+      const card = document.getElementById(`card-${id}`);
+      const weight = card.querySelector('select').value;
+      const priceText = document.getElementById(`price-${id}`).innerText.replace('₹', '');
+      
+      return {
+        ...product,
+        weight: weight,
+        price: parseInt(priceText),
+        originalId: product._id, // Keep the original ID for API reference
+        _id: `${product._id}-${weight}` // Unique ID for cart based on weight
+      };
+    }
+
+    function addToCartWithWeight(id) {
+      const productData = getSelectedProductData(id);
+      Cart.add(productData);
+      showNotification('Added to cart!');
+    }
+
+    function buyNow(id) {
+      const productData = getSelectedProductData(id);
+      // Special session storage for instant buy
+      sessionStorage.setItem('direct_buy_item', JSON.stringify(productData));
+      window.location.href = '/pages/checkout.html';
+    }
+
+    loadProducts();
+
+  </script>
+</body>
+</html>

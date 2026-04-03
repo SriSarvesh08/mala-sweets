@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My Cart — Mala Sweets and Ghee</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <script src="/js/utils.js"></script>
+  <script src="/js/navbar.js"></script>
+
+  <div class="cart-page">
+    <span class="section-label">My Cart</span>
+    <h2 class="section-title" style="margin-bottom:32px;">Your Selected Items</h2>
+
+    <div id="cartContent"></div>
+  </div>
+
+  <script>
+    function renderCart() {
+      const items = Cart.get();
+      const container = document.getElementById('cartContent');
+
+      if (!items.length) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="emoji">🛒</div>
+            <p>Your cart is empty.<br>Explore our pure homemade ghee!</p>
+            <a href="products.html" class="btn btn-primary">Shop Now</a>
+          </div>`;
+        return;
+      }
+
+      const itemsHtml = items.map(item => `
+        <div class="cart-item" id="item-${item._id}">
+          <img src="${item.imageUrl || 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=200&q=60'}" alt="${item.name}" />
+          <div class="cart-item-info">
+            <h3>${item.name}</h3>
+            <p style="font-size:0.8rem;color:var(--text-muted);margin:2px 0;">Weight: ${item.weight || '1kg'}</p>
+            <p>₹${item.price} each</p>
+          </div>
+
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty('${item._id}', ${item.quantity - 1})">−</button>
+            <span class="qty-display">${item.quantity}</span>
+            <button class="qty-btn" onclick="changeQty('${item._id}', ${item.quantity + 1})">+</button>
+          </div>
+          <span style="font-weight:700;min-width:80px;text-align:right;color:var(--brown);">₹${item.price * item.quantity}</span>
+          <button class="remove-btn" onclick="removeItem('${item._id}')" title="Remove">✕</button>
+        </div>
+      `).join('');
+
+      const total = Cart.total();
+      const delivery = total >= 999 ? 0 : 60;
+
+      container.innerHTML = `
+        <div class="cart-items">${itemsHtml}</div>
+        <div class="cart-summary">
+          <h3>Order Summary</h3>
+          <div class="summary-row"><span>Subtotal</span><span>₹${total}</span></div>
+          <div class="summary-row"><span>Delivery</span><span>${delivery === 0 ? '<span style="color:var(--success)">FREE</span>' : '₹' + delivery}</span></div>
+          ${delivery === 0 ? '' : '<div style="font-size:.8rem;color:var(--gold-dark);padding:4px 0;">🎁 Add ₹' + (999 - total) + ' more for free delivery!</div>'}
+          <div class="summary-row total"><span>Total Amount</span><span>₹${total + delivery}</span></div>
+          <button class="btn btn-primary btn-full" style="margin-top:20px;" onclick="window.location.href='checkout.html'">
+            Proceed to Checkout →
+          </button>
+          <a href="products.html" class="btn btn-outline btn-full" style="margin-top:10px;color:var(--brown);border-color:var(--border);">
+            ← Continue Shopping
+          </a>
+        </div>`;
+    }
+
+    function changeQty(id, qty) {
+      Cart.update(id, qty);
+      renderCart();
+    }
+
+    function removeItem(id) {
+      Cart.remove(id);
+      showToast('Item removed from cart', 'info');
+      renderCart();
+    }
+
+    renderCart();
+  </script>
+</body>
+</html>

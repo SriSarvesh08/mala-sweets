@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Checkout — Mala Sweets and Ghee</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+<body>
+  <script src="/js/utils.js"></script>
+  <script src="/js/navbar.js"></script>
+
+  <div class="checkout-page">
+    <span class="section-label">Checkout</span>
+    <h2 class="section-title" style="margin-bottom:8px;">Complete Your Order</h2>
+    <p style="color:var(--text-muted);margin-bottom:36px;">Fill in your details below and choose how you'd like to pay.</p>
+
+    <div style="display:grid;grid-template-columns:1.2fr 1fr;gap:32px;align-items:start;">
+      <!-- Checkout Form -->
+      <div style="background:var(--white);border-radius:18px;padding:28px;box-shadow:0 2px 12px var(--shadow);">
+        <h3 style="font-size:1.1rem;color:var(--brown-dark);margin-bottom:20px;">Delivery Details</h3>
+        <div id="checkoutForm">
+          <div class="form-group">
+            <label>Full Name *</label>
+            <input type="text" id="name" placeholder="Your full name" required />
+          </div>
+          <div class="form-group">
+            <label>Contact Number *</label>
+            <input type="tel" id="phone" placeholder="+91 98765 43210" required pattern="[0-9]{10,13}" />
+          </div>
+          <div class="form-group">
+            <label>Delivery Address *</label>
+            <textarea id="address" placeholder="House/Flat no., Street, City, State, PIN code" required></textarea>
+          </div>
+          <div class="form-group">
+            <label>Payment Method *</label>
+            <div class="payment-options">
+              <label class="payment-option selected" id="razorpayOption">
+                <input type="radio" name="payment" value="razorpay" checked onchange="selectPayment(this)" />
+                <div>
+                  <div class="payment-option-label">💳 Razorpay</div>
+                  <div class="payment-option-sub">UPI, Cards, Net Banking</div>
+                </div>
+              </label>
+              <label class="payment-option" id="codOption">
+                <input type="radio" name="payment" value="cod" onchange="selectPayment(this)" />
+                <div>
+                  <div class="payment-option-label">💵 Cash on Delivery</div>
+                  <div class="payment-option-sub">Pay when order arrives</div>
+                </div>
+              </label>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-full" id="placeOrderBtn" onclick="placeOrder()">
+            Place Order →
+          </button>
+          <div id="formError" style="color:var(--error);font-size:.88rem;margin-top:12px;display:none;"></div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div>
+        <div style="background:var(--white);border-radius:18px;padding:24px;box-shadow:0 2px 12px var(--shadow);">
+          <h3 style="font-size:1rem;color:var(--brown-dark);margin-bottom:16px;">Order Summary</h3>
+          <div id="checkoutItems" style="margin-bottom:16px;"></div>
+          <div class="summary-row" style="padding:8px 0;border-top:1px solid var(--border);">
+            <span>Subtotal</span><span id="subtotalVal">₹0</span>
+          </div>
+          <div class="summary-row">
+            <span>Delivery</span><span id="deliveryVal">₹60</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total</span><span id="totalVal" style="color:var(--brown);">₹0</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;background:rgba(201,168,76,.1);border:1px solid var(--border);border-radius:12px;padding:16px;font-size:.85rem;color:var(--brown);">
+          🔒 Secure checkout. Your data is never shared.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Load cart and render summary
+    let currentItems = [];
+    let isDirectBuy = false;
+
+    function renderSummary() {
+      const directBuyItem = sessionStorage.getItem('direct_buy_item');
+      if (directBuyItem) {
+        currentItems = [JSON.parse(directBuyItem)];
+        isDirectBuy = true;
+      } else {
+        currentItems = Cart.get();
+        isDirectBuy = false;
+      }
+
+      if (!currentItems.length) { window.location.href = 'cart.html'; return; }
+
+      const container = document.getElementById('checkoutItems');
+      container.innerHTML = currentItems.map(i => `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:.9rem;">
+          <div style="display:flex;flex-direction:column;">
+            <span style="font-weight:600;">${i.name}</span>
+            <span style="font-size:0.75rem;color:var(--text-muted);">Weight: ${i.weight || '1kg'}</span>
+          </div>
+          <span style="font-weight:700;">₹${i.price * (i.quantity || 1)}</span>
+        </div>
+      `).join('');
+
+      const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
+      const delivery = sub >= 999 ? 0 : 60;
+      document.getElementById('subtotalVal').textContent = '₹' + sub;
+      document.getElementById('deliveryVal').textContent = delivery === 0 ? 'FREE' : '₹' + delivery;
+      document.getElementById('totalVal').textContent = '₹' + (sub + delivery);
+    }
+
+    function selectPayment(radio) {
+      document.getElementById('razorpayOption').classList.remove('selected');
+      document.getElementById('codOption').classList.remove('selected');
+      radio.closest('.payment-option').classList.add('selected');
+    }
+
+    function showError(msg) {
+      const el = document.getElementById('formError');
+      el.textContent = msg;
+      el.style.display = 'block';
+    }
+    function hideError() { document.getElementById('formError').style.display = 'none'; }
+
+    function getFormData() {
+      return {
+        name: document.getElementById('name').value.trim(),
+        phone: document.getElementById('phone').value.trim(),
+        address: document.getElementById('address').value.trim(),
+        payment: document.querySelector('input[name="payment"]:checked').value
+      };
+    }
+
+    async function placeOrder() {
+      hideError();
+      const { name, phone, address, payment } = getFormData();
+      if (!name) return showError('Please enter your full name.');
+      if (!phone || !/^[0-9]{10,13}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
+      if (!address) return showError('Please enter your delivery address.');
+
+      const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
+      const delivery = sub >= 999 ? 0 : 60;
+      const total = sub + delivery;
+
+      const btn = document.getElementById('placeOrderBtn');
+      btn.disabled = true;
+      btn.textContent = 'Processing...';
+
+      const orderPayload = {
+        customerName: name,
+        phone,
+        address,
+        items: currentItems.map(i => ({ 
+          productId: i.originalId || i._id, 
+          name: `${i.name} (${i.weight || '1kg'})`, 
+          price: i.price, 
+          quantity: i.quantity || 1 
+        })),
+        totalAmount: total,
+        paymentMethod: payment
+      };
+
+      if (payment === 'razorpay') {
+        await handleRazorpay(orderPayload, total);
+      } else {
+        await handleCOD(orderPayload);
+      }
+
+      btn.disabled = false;
+      btn.textContent = 'Place Order →';
+    }
+
+    async function handleCOD(payload) {
+      try {
+        showLoader();
+        const res = await apiFetch('/orders', { method: 'POST', body: JSON.stringify(payload) });
+        hideLoader();
+        finalizeOrder();
+        window.location.href = `success.html?orderId=${res.order._id}`;
+      } catch (e) {
+        hideLoader();
+        showError('Order failed: ' + e.message);
+      }
+    }
+
+    function finalizeOrder() {
+      if (isDirectBuy) {
+        sessionStorage.removeItem('direct_buy_item');
+      } else {
+        Cart.clear();
+      }
+    }
+
+    async function handleRazorpay(payload, total) {
+      try {
+        showLoader();
+        const res = await apiFetch('/payment/create-order', {
+          method: 'POST',
+          body: JSON.stringify({ amount: total })
+        });
+        hideLoader();
+
+        const options = {
+          key: res.key,
+          amount: res.order.amount,
+          currency: 'INR',
+          name: 'Mala Sweets and Ghee',
+          description: 'Payment for your pure sweets and ghee order',
+          order_id: res.order.id,
+          handler: async function (response) {
+            showLoader();
+            // Verify payment
+            await apiFetch('/payment/verify', {
+              method: 'POST',
+              body: JSON.stringify(response)
+            });
+            // Save order
+            const orderRes = await apiFetch('/orders', {
+              method: 'POST',
+              body: JSON.stringify({
+                ...payload,
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id
+              })
+            });
+            hideLoader();
+            finalizeOrder();
+            window.location.href = `success.html?orderId=${orderRes.order._id}&paid=true`;
+
+          },
+          prefill: {
+            name: payload.customerName,
+            contact: payload.phone
+          },
+          theme: { color: '#C9A84C' },
+          modal: {
+            ondismiss: function () {
+              document.getElementById('placeOrderBtn').disabled = false;
+              document.getElementById('placeOrderBtn').textContent = 'Place Order →';
+              showError('Payment cancelled. You can try again or choose Cash on Delivery.');
+            }
+          }
+        };
+
+        const rzp = new Razorpay(options);
+        rzp.open();
+      } catch (e) {
+        hideLoader();
+        showError('Razorpay not available. Please use Cash on Delivery. (' + e.message + ')');
+        document.querySelector('input[value="cod"]').click();
+        document.getElementById('codOption').classList.add('selected');
+        document.getElementById('razorpayOption').classList.remove('selected');
+      }
+    }
+
+    renderSummary();
+  </script>
+</body>
+</html>

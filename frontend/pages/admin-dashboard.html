@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard — Mala Sweets and Ghee</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .stat-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+    .stat-card { background: #fff; border-radius: 14px; padding: 20px; box-shadow: 0 2px 10px var(--shadow); border-left: 4px solid var(--gold); }
+    .stat-card .label { font-size: .78rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
+    .stat-card .value { font-family: 'Playfair Display', serif; font-size: 1.8rem; color: var(--brown-dark); font-weight: 700; }
+    .tab-bar { display: flex; gap: 4px; background: #fff; border-radius: 12px; padding: 6px; margin-bottom: 24px; box-shadow: 0 2px 8px var(--shadow); width: fit-content; }
+    .tab-btn { padding: 8px 20px; border: none; background: none; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: .88rem; color: var(--text-muted); transition: all .2s; }
+    .tab-btn.active { background: var(--brown); color: #fff; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+    .action-btn { padding: 5px 14px; border-radius: 6px; border: none; cursor: pointer; font-size: .8rem; font-weight: 700; transition: all .2s; }
+    .edit-btn { background: var(--cream-dark); color: var(--brown); }
+    .edit-btn:hover { background: var(--gold); color: var(--brown-dark); }
+    .del-btn { background: #fce4ec; color: #c62828; margin-left: 6px; }
+    .del-btn:hover { background: #c62828; color: #fff; }
+    .seed-notice { background: rgba(201,168,76,.12); border: 1px dashed var(--gold); border-radius: 10px; padding: 14px 18px; margin-bottom: 20px; font-size: .88rem; color: var(--brown); }
+  </style>
+</head>
+<body>
+  <script src="/js/utils.js"></script>
+
+  <!-- Guard -->
+  <script>
+    if (!localStorage.getItem('adminToken')) window.location.href = 'admin.html';
+  </script>
+
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div style="font-size:3rem;">🧈</div>
+        <h2>Mala Sweets</h2>
+        <p style="color:var(--text-light);font-size:0.8rem;opacity:0.8;">Admin Panel</p>
+      </div>
+      <nav class="sidebar-nav">
+        <a href="#" class="active" onclick="showTab('products')"><span class="nav-icon">📦</span> Products</a>
+        <a href="#" onclick="showTab('orders')"><span class="nav-icon">🧾</span> Orders</a>
+        <a href="index.html" target="_blank"><span class="nav-icon">🌐</span> View Site</a>
+        <a href="#" onclick="logout()" style="margin-top:auto;color:#ff9a9a;"><span class="nav-icon">🚪</span> Logout</a>
+      </nav>
+    </aside>
+
+    <!-- Main -->
+    <div class="admin-main">
+      <div class="admin-topbar">
+        <h1 id="pageTitle">Products</h1>
+        <div style="display:flex;gap:10px;align-items:center;">
+          <button class="btn btn-primary btn-sm" onclick="openAddModal()" id="addProductBtn">+ Add Product</button>
+          <span style="font-size:.82rem;color:var(--text-muted);">Admin</span>
+        </div>
+      </div>
+
+      <div class="admin-content">
+        <!-- Stats -->
+        <div class="stat-cards" id="statCards">
+          <div class="stat-card"><div class="label">Total Products</div><div class="value" id="statProducts">—</div></div>
+          <div class="stat-card"><div class="label">Total Orders</div><div class="value" id="statOrders">—</div></div>
+          <div class="stat-card"><div class="label">Revenue</div><div class="value" id="statRevenue">—</div></div>
+          <div class="stat-card"><div class="label">Pending COD</div><div class="value" id="statPending">—</div></div>
+        </div>
+
+        <!-- Products Tab -->
+        <div class="tab-content active" id="tab-products">
+          <div class="seed-notice">
+            💡 <strong>First time setup?</strong> Click <a href="#" onclick="seedProducts()" style="color:var(--brown-dark);font-weight:700;">Seed Default Products</a> to add sample ghee products to your database.
+          </div>
+          <div id="productsTableWrap">
+            <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+          </div>
+        </div>
+
+        <!-- Orders Tab -->
+        <div class="tab-content" id="tab-orders">
+          <div id="ordersTableWrap">
+            <div style="text-align:center;padding:40px;"><div class="spinner" style="margin:0 auto;"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Product Modal -->
+  <div class="modal-overlay" id="productModal">
+    <div class="modal">
+      <h3 id="modalTitle">Add New Product</h3>
+      <input type="hidden" id="editProductId" />
+
+      <div class="form-group">
+        <label>Product Name *</label>
+        <input type="text" id="pName" placeholder="e.g. Pure Cow Ghee – 500g" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Price (₹) *</label>
+          <input type="number" id="pPrice" placeholder="499" min="1" />
+        </div>
+        <div class="form-group">
+          <label>Weight</label>
+          <input type="text" id="pWeight" placeholder="500g" />
+        </div>
+        <div class="form-group">
+          <label>In Stock *</label>
+          <input type="number" id="pStock" placeholder="100" min="0" value="100" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label>Description *</label>
+        <textarea id="pDesc" placeholder="Product description..."></textarea>
+      </div>
+      <div class="form-group">
+        <label>Image URL <span style="font-weight:400;color:var(--text-muted);">(or upload below)</span></label>
+        <input type="text" id="pImageUrl" placeholder="https://..." />
+      </div>
+      <div class="form-group">
+        <label>Upload Image <span style="font-weight:400;color:var(--text-muted);">(optional, overrides URL)</span></label>
+        <input type="file" id="pImageFile" accept="image/*" style="padding:8px;background:var(--cream);border:1px solid var(--border);border-radius:8px;width:100%;" />
+      </div>
+      <div class="form-group" style="display:flex;align-items:center;gap:10px;">
+        <input type="checkbox" id="pFeatured" style="width:16px;height:16px;accent-color:var(--gold);" />
+        <label for="pFeatured" style="margin:0;cursor:pointer;">Mark as Featured product</label>
+      </div>
+      <div id="modalError" style="color:var(--error);font-size:.85rem;margin-bottom:12px;display:none;"></div>
+      <div style="display:flex;gap:12px;margin-top:8px;">
+        <button class="btn btn-primary" onclick="saveProduct()" id="saveBtn">Save Product</button>
+        <button class="btn" style="background:var(--border);color:var(--text);" onclick="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let allProducts = [];
+    let allOrders = [];
+
+    // ─── Tab switching ────────────────────────────────────────────────────────
+    function showTab(tab) {
+      document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+      document.getElementById('tab-' + tab).classList.add('active');
+      document.getElementById('pageTitle').textContent = tab === 'products' ? 'Products' : 'Orders';
+      document.getElementById('addProductBtn').style.display = tab === 'products' ? 'block' : 'none';
+      document.querySelectorAll('.sidebar-nav a').forEach((a, i) => {
+        a.classList.toggle('active', (tab === 'products' && i === 0) || (tab === 'orders' && i === 1));
+      });
+      if (tab === 'orders') loadOrders();
+    }
+
+    // ─── Products ─────────────────────────────────────────────────────────────
+    async function loadProducts() {
+      try {
+        const data = await apiFetch('/products');
+        allProducts = data.products;
+        document.getElementById('statProducts').textContent = allProducts.length;
+        renderProductsTable();
+      } catch (e) {
+        document.getElementById('productsTableWrap').innerHTML = `<p style="color:var(--error);">Error: ${e.message}</p>`;
+      }
+    }
+
+    function renderProductsTable() {
+      const wrap = document.getElementById('productsTableWrap');
+      if (!allProducts.length) {
+        wrap.innerHTML = '<div class="empty-state"><div class="emoji">📦</div><p>No products yet. Add one or seed defaults.</p></div>';
+        return;
+      }
+      wrap.innerHTML = `
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Name</th>
+              <th>Price</th>
+              <th>Weight</th>
+              <th>Stock</th>
+              <th>Featured</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${allProducts.map(p => `
+              <tr>
+                <td><img src="${p.imageUrl || 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=100&q=60'}" alt="${p.name}" /></td>
+                <td><strong>${p.name}</strong><br/><span style="font-size:.8rem;color:var(--text-muted);">${p.description.slice(0, 60)}...</span></td>
+                <td style="font-weight:700;color:var(--brown);">₹${p.price}</td>
+                <td>${p.weight || '—'}</td>
+                <td><span class="tag ${p.stock > 10 ? 'tag-success' : 'tag-error'}">${p.stock || 0}</span></td>
+                <td>${p.featured ? '<span class="tag tag-success">⭐ Yes</span>' : '<span class="tag tag-info">No</span>'}</td>
+                <td>
+                  <button class="action-btn edit-btn" onclick="openEditModal('${p._id}')">✏️ Edit</button>
+                  <button class="action-btn del-btn" onclick="deleteProduct('${p._id}', '${p.name}')">🗑️ Delete</button>
+                </td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>`;
+    }
+
+    // ─── Seed ─────────────────────────────────────────────────────────────────
+    async function seedProducts() {
+      if (!confirm('This will add default ghee products to your database. Continue?')) return;
+      showLoader();
+      try {
+        const data = await apiFetch('/auth/seed', { method: 'POST' });
+        hideLoader();
+        showToast(data.message, 'success');
+        await loadProducts();
+      } catch (e) {
+        hideLoader();
+        showToast('Seed error: ' + e.message, 'error');
+      }
+    }
+
+    // ─── Orders ───────────────────────────────────────────────────────────────
+    async function loadOrders() {
+      const wrap = document.getElementById('ordersTableWrap');
+      try {
+        const data = await apiFetch('/orders');
+        allOrders = data.orders;
+
+        const revenue = allOrders.reduce((s, o) => s + o.totalAmount, 0);
+        const pending = allOrders.filter(o => o.paymentMethod === 'cod' && o.paymentStatus === 'pending').length;
+        document.getElementById('statOrders').textContent = allOrders.length;
+        document.getElementById('statRevenue').textContent = '₹' + revenue.toLocaleString('en-IN');
+        document.getElementById('statPending').textContent = pending;
+
+        if (!allOrders.length) {
+          wrap.innerHTML = '<div class="empty-state"><div class="emoji">🧾</div><p>No orders yet.</p></div>';
+          return;
+        }
+
+        wrap.innerHTML = `
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Items</th>
+                <th>Total</th>
+                <th>Payment</th>
+                <th>Status</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${allOrders.map(o => `
+                <tr>
+                  <td style="font-family:monospace;font-size:.8rem;">#${o._id.slice(-6).toUpperCase()}</td>
+                  <td><strong>${o.customerName}</strong><br/><span style="font-size:.78rem;color:var(--text-muted);">${o.address.slice(0, 40)}...</span></td>
+                  <td>${o.phone}</td>
+                  <td>${o.items.map(i => `${i.name} ×${i.quantity}`).join('<br/>')}</td>
+                  <td style="font-weight:700;color:var(--brown);">₹${o.totalAmount}</td>
+                  <td>
+                    ${o.paymentMethod === 'cod'
+                      ? '<span class="tag tag-warning">💵 COD</span>'
+                      : '<span class="tag tag-success">💳 Razorpay</span>'}
+                    <br/>
+                    ${o.paymentStatus === 'paid'
+                      ? '<span class="tag tag-success" style="margin-top:4px;">Paid</span>'
+                      : '<span class="tag tag-warning" style="margin-top:4px;">Pending</span>'}
+                  </td>
+                  <td>
+                    <select onchange="updateOrderStatus('${o._id}', this.value)" style="padding:4px 8px;border:1px solid var(--border);border-radius:6px;font-size:.8rem;background:var(--cream);">
+                      ${['placed','processing','shipped','delivered','cancelled'].map(s =>
+                        `<option value="${s}" ${o.orderStatus === s ? 'selected' : ''}>${s.charAt(0).toUpperCase() + s.slice(1)}</option>`
+                      ).join('')}
+                    </select>
+                  </td>
+                  <td style="font-size:.78rem;color:var(--text-muted);">${new Date(o.createdAt).toLocaleDateString('en-IN')}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>`;
+      } catch (e) {
+        wrap.innerHTML = `<p style="color:var(--error);">Error loading orders: ${e.message}</p>`;
+      }
+    }
+
+    async function updateOrderStatus(id, status) {
+      try {
+        await apiFetch(`/orders/${id}/status`, { method: 'PATCH', body: JSON.stringify({ orderStatus: status }) });
+        showToast('Order status updated', 'success');
+      } catch (e) {
+        showToast('Update failed: ' + e.message, 'error');
+      }
+    }
+
+    // ─── Modal ────────────────────────────────────────────────────────────────
+    function openAddModal() {
+      document.getElementById('modalTitle').textContent = 'Add New Product';
+      document.getElementById('editProductId').value = '';
+      document.getElementById('pName').value = '';
+      document.getElementById('pPrice').value = '';
+      document.getElementById('pWeight').value = '';
+      document.getElementById('pDesc').value = '';
+      document.getElementById('pImageUrl').value = '';
+      document.getElementById('pImageFile').value = '';
+      document.getElementById('pFeatured').checked = false;
+      document.getElementById('pStock').value = 100;
+      document.getElementById('modalError').style.display = 'none';
+      document.getElementById('productModal').classList.add('open');
+    }
+
+    function openEditModal(id) {
+      const p = allProducts.find(p => p._id === id);
+      if (!p) return;
+      document.getElementById('modalTitle').textContent = 'Edit Product';
+      document.getElementById('editProductId').value = p._id;
+      document.getElementById('pName').value = p.name;
+      document.getElementById('pPrice').value = p.price;
+      document.getElementById('pWeight').value = p.weight || '';
+      document.getElementById('pDesc').value = p.description;
+      document.getElementById('pImageUrl').value = p.imageUrl || '';
+      document.getElementById('pImageFile').value = '';
+      document.getElementById('pFeatured').checked = p.featured;
+      document.getElementById('pStock').value = p.stock || 0;
+      document.getElementById('modalError').style.display = 'none';
+      document.getElementById('productModal').classList.add('open');
+    }
+
+    function closeModal() {
+      document.getElementById('productModal').classList.remove('open');
+    }
+
+    document.getElementById('productModal').addEventListener('click', function(e) {
+      if (e.target === this) closeModal();
+    });
+
+    async function saveProduct() {
+      const id = document.getElementById('editProductId').value;
+      const name = document.getElementById('pName').value.trim();
+      const price = document.getElementById('pPrice').value;
+      const desc = document.getElementById('pDesc').value.trim();
+      const errEl = document.getElementById('modalError');
+      errEl.style.display = 'none';
+
+      if (!name || !price || !desc) {
+        errEl.textContent = 'Name, price, and description are required.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      const saveBtn = document.getElementById('saveBtn');
+      saveBtn.disabled = true;
+      saveBtn.textContent = 'Saving...';
+
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('price', price);
+      formData.append('description', desc);
+      formData.append('weight', document.getElementById('pWeight').value);
+      formData.append('featured', document.getElementById('pFeatured').checked);
+      formData.append('stock', document.getElementById('pStock').value);
+      formData.append('imageUrl', document.getElementById('pImageUrl').value.trim());
+
+      const imageFile = document.getElementById('pImageFile').files[0];
+      if (imageFile) formData.append('image', imageFile);
+
+      try {
+        const token = localStorage.getItem('adminToken');
+        const url = `${API_BASE}/products${id ? '/' + id : ''}`;
+        const method = id ? 'PUT' : 'POST';
+        const res = await fetch(url, { method, headers: { 'Authorization': 'Bearer ' + token }, body: formData });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message);
+        showToast(id ? 'Product updated!' : 'Product added!', 'success');
+        closeModal();
+        await loadProducts();
+      } catch (e) {
+        errEl.textContent = e.message;
+        errEl.style.display = 'block';
+      }
+
+      saveBtn.disabled = false;
+      saveBtn.textContent = 'Save Product';
+    }
+
+    async function deleteProduct(id, name) {
+      if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+      try {
+        await apiFetch('/products/' + id, { method: 'DELETE' });
+        showToast('Product deleted', 'info');
+        await loadProducts();
+      } catch (e) {
+        showToast('Delete failed: ' + e.message, 'error');
+      }
+    }
+
+    function logout() {
+      localStorage.removeItem('adminToken');
+      window.location.href = 'admin.html';
+    }
+
+    // ─── Init ─────────────────────────────────────────────────────────────────
+    loadProducts();
+    // Load order stats in background
+    apiFetch('/orders').then(data => {
+      const revenue = data.orders.reduce((s, o) => s + o.totalAmount, 0);
+      const pending = data.orders.filter(o => o.paymentMethod === 'cod' && o.paymentStatus === 'pending').length;
+      document.getElementById('statOrders').textContent = data.orders.length;
+      document.getElementById('statRevenue').textContent = '₹' + revenue.toLocaleString('en-IN');
+      document.getElementById('statPending').textContent = pending;
+    }).catch(() => {});
+  </script>
+</body>
+</html>

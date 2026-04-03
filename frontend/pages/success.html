@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Order Placed! — SS Dairy Products</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <script src="/js/utils.js"></script>
+  <script src="/js/navbar.js"></script>
+
+  <section style="padding:80px 5%;">
+    <div class="success-page">
+      <div class="success-icon">🎉</div>
+      <h2>Order Placed Successfully!</h2>
+      <p id="successMsg">Thank you for your order. We've received your details and our team will process it shortly.</p>
+
+      <div id="orderDetails" style="background:var(--cream);border:1px solid var(--border);border-radius:14px;padding:24px;margin:28px 0;text-align:left;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px;">
+          <span style="color:var(--text-muted);font-size:.9rem;">Order ID</span>
+          <span id="orderIdDisplay" style="font-weight:700;color:var(--brown);font-size:.9rem;font-family:monospace;"></span>
+        </div>
+        <div style="display:flex;justify-content:space-between;">
+          <span style="color:var(--text-muted);font-size:.9rem;">Payment</span>
+          <span id="paymentDisplay" style="font-weight:700;font-size:.9rem;"></span>
+        </div>
+      </div>
+
+      <div style="background:rgba(201,168,76,.1);border-radius:12px;padding:16px;margin-bottom:28px;font-size:.9rem;color:var(--brown);">
+        📧 You will receive order confirmation details shortly.<br/>
+        📞 Our team will call you to confirm delivery timing.
+      </div>
+
+      <div style="display:flex;gap:14px;justify-content:center;flex-wrap:wrap;">
+        <a href="products.html" class="btn btn-primary">Continue Shopping</a>
+        <a href="index.html" class="btn btn-outline" style="color:var(--brown);border-color:var(--border);">Back to Home</a>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const orderId = params.get('orderId');
+    const paid = params.get('paid') === 'true';
+
+    if (orderId) {
+      document.getElementById('orderIdDisplay').textContent = '#' + orderId.slice(-8).toUpperCase();
+    }
+
+    document.getElementById('paymentDisplay').innerHTML = paid
+      ? '<span style="color:var(--success);">✅ Paid via Razorpay</span>'
+      : '<span style="color:#e67e22;">💵 Cash on Delivery</span>';
+
+    if (paid) {
+      document.getElementById('successMsg').textContent = 'Payment successful! Your order has been confirmed and will be dispatched soon.';
+    }
+  </script>
+</body>
+</html>

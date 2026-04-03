@@ -1,0 +1,13 @@
+{
+  "name": "ss-dairy-products-root",
+  "version": "1.0.0",
+  "description": "Unified runner for SS Dairy Products",
+  "scripts": {
+    "start": "cd backend && npm start",
+    "dev": "cd backend && npm run dev",
+    "install-all": "cd backend && npm install",
+    "test-server": "node -e \"const http = require('http'); http.get('http://localhost:5000/api/health', (res) => { console.log('Server status:', res.statusCode === 200 ? 'OK' : 'FAIL'); process.exit(0); }).on('error', (e) => { console.log('Server status: ERROR', e.message); process.exit(1); })\""
+  },
+  "author": "",
+  "license": "ISC"
+}
