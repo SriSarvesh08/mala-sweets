@@ -16,6 +16,11 @@ const orderSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
+  customerEmail: {
+    type: String,
+    required: true,
+    trim: true
+  },
   items: [{
     productId: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
     name: String,

@@ -23,46 +23,58 @@ async function sendOrderEmail(order) {
     </tr>`
   ).join('');
 
-  console.log(`📠 Sending email TO: ${process.env.ADMIN_NOTIFY_EMAIL} FROM: ${process.env.GMAIL_USER}`);
+  console.log(`📠 Sending email TO: ${process.env.ADMIN_NOTIFY_EMAIL}, ${order.customerEmail} FROM: ${process.env.GMAIL_USER}`);
   
   const mailOptions = {
-    from: `"SS Dairy Products" <${process.env.GMAIL_USER}>`,
-    to: process.env.ADMIN_NOTIFY_EMAIL,
-    subject: `🧈 New Order #${order._id.toString().slice(-6).toUpperCase()} - ₹${order.totalAmount}`,
+    from: `"Mala Sweets and Ghee" <${process.env.GMAIL_USER}>`,
+    to: [process.env.ADMIN_NOTIFY_EMAIL, order.customerEmail],
+    subject: `🍬 Order Confirmed! #${order._id.toString().slice(-6).toUpperCase()} - Mala Sweets and Ghee`,
     html: `
-      <div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;background:#fffbf5;border:2px solid #c9a84c;border-radius:8px;overflow:hidden;">
-        <div style="background:linear-gradient(135deg,#8B4513,#c9a84c);padding:24px;text-align:center;">
-          <h1 style="color:#fff;margin:0;font-size:24px;">🧈 SS Dairy Products</h1>
-          <p style="color:#ffe8b0;margin:4px 0 0;">New Order Received!</p>
+      <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fffaf0;border:1px solid #e8d5b7;border-radius:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
+        <div style="background:linear-gradient(135deg,#5D4037,#8D6E63);padding:30px;text-align:center;">
+          <h1 style="color:#fff;margin:0;font-size:28px;letter-spacing:1px;">Mala Sweets and Ghee</h1>
+          <p style="color:#dcedc8;margin:8px 0 0;font-size:16px;">Pure • Homemade • Traditional</p>
         </div>
-        <div style="padding:24px;">
-          <h2 style="color:#8B4513;border-bottom:2px solid #c9a84c;padding-bottom:8px;">Customer Details</h2>
-          <table style="width:100%;border-collapse:collapse;">
-            <tr><td style="padding:6px;color:#666;width:40%;">Name</td><td style="padding:6px;font-weight:bold;">${order.customerName}</td></tr>
-            <tr><td style="padding:6px;color:#666;">Phone</td><td style="padding:6px;font-weight:bold;">${order.phone}</td></tr>
-            <tr><td style="padding:6px;color:#666;">Address</td><td style="padding:6px;">${order.address}</td></tr>
-            <tr><td style="padding:6px;color:#666;">Payment</td><td style="padding:6px;text-transform:uppercase;font-weight:bold;color:${order.paymentMethod === 'cod' ? '#e67e22' : '#27ae60'};">${order.paymentMethod === 'cod' ? '💵 Cash on Delivery' : '💳 Razorpay'}</td></tr>
+        <div style="padding:30px;background:#fff;">
+          <div style="text-align:center;margin-bottom:25px;">
+             <h2 style="color:#5D4037;margin:0;font-size:20px;">Order Confirmation</h2>
+             <p style="color:#777;margin:5px 0;">Thank you for your order, ${order.customerName}!</p>
+          </div>
+
+          <h3 style="color:#8D6E63;border-bottom:1px solid #eee;padding-bottom:10px;font-size:16px;">Delivery Details</h3>
+          <table style="width:100%;margin-bottom:20px;font-size:14px;color:#444;">
+            <tr><td style="padding:5px 0;width:30%;">Phone:</td><td style="font-weight:bold;">${order.phone}</td></tr>
+            <tr><td style="padding:5px 0;">Address:</td><td>${order.address}</td></tr>
+            <tr><td style="padding:5px 0;">Payment:</td><td style="font-weight:bold;color:${order.paymentMethod === 'cod' ? '#d84315' : '#2e7d32'};">${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid Online (Razorpay)'}</td></tr>
           </table>
 
-          <h2 style="color:#8B4513;border-bottom:2px solid #c9a84c;padding-bottom:8px;margin-top:24px;">Order Items</h2>
-          <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          <h3 style="color:#8D6E63;border-bottom:1px solid #eee;padding-bottom:10px;font-size:16px;">Your Items</h3>
+          <table style="width:100%;border-collapse:collapse;font-size:14px;margin-bottom:20px;">
             <thead>
-              <tr style="background:#f5e6cc;">
-                <th style="padding:8px;border:1px solid #e8d5b7;text-align:left;">Product</th>
-                <th style="padding:8px;border:1px solid #e8d5b7;">Qty</th>
-                <th style="padding:8px;border:1px solid #e8d5b7;text-align:right;">Unit Price</th>
-                <th style="padding:8px;border:1px solid #e8d5b7;text-align:right;">Subtotal</th>
+              <tr style="background:#f9f5f0;color:#5D4037;">
+                <th style="padding:12px;text-align:left;border-bottom:2px solid #e8d5b7;">Product</th>
+                <th style="padding:12px;text-align:center;border-bottom:2px solid #e8d5b7;">Qty</th>
+                <th style="padding:12px;text-align:right;border-bottom:2px solid #e8d5b7;">Price</th>
               </tr>
             </thead>
             <tbody>${itemsHtml}</tbody>
             <tfoot>
-              <tr style="background:#8B4513;color:#fff;">
-                <td colspan="3" style="padding:10px;font-weight:bold;text-align:right;">Total Amount</td>
-                <td style="padding:10px;font-weight:bold;font-size:16px;text-align:right;">₹${order.totalAmount}</td>
+              <tr>
+                <td colspan="2" style="padding:15px 12px;font-weight:bold;text-align:right;color:#5D4037;font-size:16px;">Total Amount Paid</td>
+                <td style="padding:15px 12px;font-weight:bold;font-size:18px;text-align:right;color:#5D4037;">₹${order.totalAmount}</td>
               </tr>
             </tfoot>
           </table>
-          <p style="color:#999;font-size:12px;margin-top:20px;">Order ID: ${order._id} | Placed at: ${new Date(order.createdAt).toLocaleString('en-IN')}</p>
+          
+          <div style="background:#fdfcf0;padding:20px;border-radius:8px;text-align:center;border:1px dashed #c9a84c;">
+            <p style="margin:0;color:#8B4513;font-weight:bold;">We've received your order and are preparing it fresh!</p>
+            <p style="margin:5px 0 0;font-size:13px;color:#666;">You'll receive another update once your order is shipped.</p>
+          </div>
+
+          <div style="margin-top:30px;padding-top:20px;border-top:1px solid #eee;text-align:center;color:#999;font-size:12px;">
+            <p>Order ID: ${order._id} | ${new Date(order.createdAt).toLocaleString('en-IN')}</p>
+            <p>© 2024 Mala Sweets and Ghee. All rights reserved.</p>
+          </div>
         </div>
       </div>
     `
@@ -74,9 +86,9 @@ async function sendOrderEmail(order) {
 // POST /api/orders - Place order
 router.post('/', async (req, res) => {
   try {
-    const { customerName, phone, address, items, totalAmount, paymentMethod, razorpayOrderId, razorpayPaymentId } = req.body;
+    const { customerName, phone, customerEmail, address, items, totalAmount, paymentMethod, razorpayOrderId, razorpayPaymentId } = req.body;
 
-    if (!customerName || !phone || !address || !items?.length || !totalAmount || !paymentMethod)
+    if (!customerName || !phone || !customerEmail || !address || !items?.length || !totalAmount || !paymentMethod)
       return res.status(400).json({ success: false, message: 'Missing required fields' });
 
     // ─── Mock Mode: Skip DB validation ────────────────────────────────────────
@@ -135,6 +147,7 @@ router.post('/', async (req, res) => {
     const order = new Order({
       customerName, 
       phone, 
+      customerEmail,
       address, 
       items: verifiedItems, 
       totalAmount: finalTotal, // Use our verified total
