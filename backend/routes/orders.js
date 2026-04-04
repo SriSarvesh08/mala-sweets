@@ -164,11 +164,15 @@ router.post('/', async (req, res) => {
     
     await order.save();
 
-    // Send email notification (non-blocking)
+    // Send email notification (BLOCKING to guarantee delivery on Render)
     console.log(`📧 Attempting to send order email for Order #${order._id}...`);
-    sendOrderEmail(order)
-      .then(() => console.log('✅ Order notification email sent!'))
-      .catch(err => console.error('❌ CRITICAL Email error:', err.message));
+    try {
+      await sendOrderEmail(order);
+      console.log('✅ Order notification email sent!');
+    } catch (emailErr) {
+      console.error('❌ CRITICAL Email error:', emailErr.message);
+      // We don't fail the order if email fails, but we logged it.
+    }
 
     res.status(201).json({ success: true, order, message: 'Order placed successfully!' });
 
