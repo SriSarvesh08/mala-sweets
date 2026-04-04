@@ -1,11 +1,11 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Checkout — Mala Sweets and Ghee</title>
   <link rel="stylesheet" href="/css/style.css" />
-  <script src="https://checkout.razorpay.com/v1/checkout.js" async></script>
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
   <script src="/js/utils.js"></script>
@@ -83,14 +83,6 @@
   </div>
 
   <script>
-    // Global error handler to catch silent JS failures
-    window.onerror = function(msg, url, line, col, error) {
-      console.error('[GLOBAL ERROR]', msg, 'at', url, ':', line);
-      var errDiv = document.getElementById('formError');
-      if (errDiv) { errDiv.textContent = 'Error: ' + msg; errDiv.style.display = 'block'; }
-      return false;
-    };
-
     // Load cart and render summary
     let currentItems = [];
     let isDirectBuy = false;
@@ -232,11 +224,6 @@
 
     async function handleRazorpay(payload, total) {
       try {
-        // Check if Razorpay SDK is loaded (it's async now)
-        if (typeof Razorpay === 'undefined') {
-          console.warn('[Checkout] Razorpay SDK not loaded, falling back to COD');
-          throw new Error('Razorpay not loaded yet');
-        }
         console.log('[Checkout] handleRazorpay: creating order...');
         showLoader();
         const res = await apiFetch('/payment/create-order', {
@@ -307,3 +294,4 @@
   </script>
 </body>
 </html>
+
