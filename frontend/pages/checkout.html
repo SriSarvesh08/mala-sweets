@@ -144,7 +144,8 @@
       hideError();
       const { name, phone, email, address, payment } = getFormData();
       if (!name) return showError('Please enter your full name.');
-      if (!phone || !/^[0-9]{10,13}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
+      if (!phone || !/^\+?[0-9]{10,14}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
+
       
       if (document.getElementById('email') && (!email || !email.includes('@'))) {
         return showError('Please enter a valid email address.');
