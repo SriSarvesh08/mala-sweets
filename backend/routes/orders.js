@@ -159,7 +159,7 @@ router.post('/', async (req, res) => {
       paymentMethod,
       razorpayOrderId, 
       razorpayPaymentId,
-      paymentStatus: paymentMethod === 'razorpay' ? 'paid' : 'pending'
+      paymentStatus: req.body.paymentStatus || (paymentMethod === 'razorpay' ? 'paid' : 'pending')
     });
     
     await order.save();

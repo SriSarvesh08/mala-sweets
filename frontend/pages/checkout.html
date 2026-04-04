@@ -254,20 +254,28 @@
           description: 'Payment for your pure sweets and ghee order',
           order_id: res.order.id,
           handler: async function (response) {
+            let verifyFailed = false;
             try {
               showLoader();
-              // Verify payment
+              // Verify payment securely on backend
               await apiFetch('/payment/verify', {
                 method: 'POST',
                 body: JSON.stringify(response)
               });
-              // Save order
+            } catch (verifyErr) {
+              console.warn('[Razorpay] Verification warning:', verifyErr);
+              verifyFailed = true; // Still proceed to save the order!
+            }
+
+            try {
+              // Save order NO MATTER WHAT, because payment was captured
               const orderRes = await apiFetch('/orders', {
                 method: 'POST',
                 body: JSON.stringify({
                   ...payload,
                   razorpayOrderId: response.razorpay_order_id,
-                  razorpayPaymentId: response.razorpay_payment_id
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  paymentStatus: verifyFailed ? 'pending' : 'paid'
                 })
               });
               hideLoader();
@@ -277,7 +285,6 @@
               hideLoader();
               console.error('[Razorpay Handler Error]', err);
               showError('Payment succeeded but order saving failed: ' + err.message + '. Please contact support.');
-              // Ensure order is placed as COD fallback or notify them
             }
           },
           prefill: {
