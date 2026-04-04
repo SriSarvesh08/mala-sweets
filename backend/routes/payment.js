@@ -45,10 +45,14 @@ router.post('/verify', (req, res) => {
       .digest('hex');
 
     if (expectedSignature === razorpay_signature) {
-      res.json({ success: true, message: 'Payment verified' });
+      // Payment is verified. Razorpay automatically captures payments for Orders if configured in dashboard.
+      console.log(`✅ Payment Verified: Order ${razorpay_order_id}, Payment ${razorpay_payment_id}`);
+      res.json({ success: true, message: 'Payment verified and ready for capture.' });
     } else {
+      console.error(`❌ Payment Signature Mismatch! Order ${razorpay_order_id}`);
       res.status(400).json({ success: false, message: 'Payment verification failed' });
     }
+
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
