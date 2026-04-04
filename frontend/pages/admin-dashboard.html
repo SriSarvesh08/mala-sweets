@@ -251,8 +251,13 @@
               ${allOrders.map(o => `
                 <tr>
                   <td style="font-family:monospace;font-size:.8rem;">#${o._id.slice(-6).toUpperCase()}</td>
-                  <td><strong>${o.customerName}</strong><br/><span style="font-size:.78rem;color:var(--text-muted);">${o.address.slice(0, 40)}...</span></td>
+                  <td>
+                    <strong>${o.customerName}</strong>
+                    ${o.customerEmail ? `<br/><a href="mailto:${o.customerEmail}" style="font-size:.8rem;color:var(--gold-dark);">${o.customerEmail}</a>` : ''}
+                    <br/><span style="font-size:.78rem;color:var(--text-muted);">${o.address.slice(0, 40)}...</span>
+                  </td>
                   <td>${o.phone}</td>
+
                   <td>${o.items.map(i => `${i.name} ×${i.quantity}`).join('<br/>')}</td>
                   <td style="font-weight:700;color:var(--brown);">₹${o.totalAmount}</td>
                   <td>
