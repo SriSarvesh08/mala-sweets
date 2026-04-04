@@ -23,12 +23,16 @@ async function sendOrderEmail(order) {
     </tr>`
   ).join('');
 
-  console.log(`📠 Sending email TO: ${process.env.ADMIN_NOTIFY_EMAIL}, ${order.customerEmail} FROM: ${process.env.GMAIL_USER}`);
+  console.log(`📠 Sending email TO: ${process.env.ADMIN_NOTIFY_EMAIL}, ${order.customerEmail || 'No Customer Email'} FROM: ${process.env.GMAIL_USER}`);
   
+  const recipients = [process.env.ADMIN_NOTIFY_EMAIL];
+  if (order.customerEmail) recipients.push(order.customerEmail);
+
   const mailOptions = {
     from: `"Mala Sweets and Ghee" <${process.env.GMAIL_USER}>`,
-    to: [process.env.ADMIN_NOTIFY_EMAIL, order.customerEmail],
+    to: recipients,
     subject: `🍬 Order Confirmed! #${order._id.toString().slice(-6).toUpperCase()} - Mala Sweets and Ghee`,
+
     html: `
       <div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:600px;margin:0 auto;background:#fffaf0;border:1px solid #e8d5b7;border-radius:12px;overflow:hidden;box-shadow:0 4px 15px rgba(0,0,0,0.1);">
         <div style="background:linear-gradient(135deg,#5D4037,#8D6E63);padding:30px;text-align:center;">
@@ -88,8 +92,9 @@ router.post('/', async (req, res) => {
   try {
     const { customerName, phone, customerEmail, address, items, totalAmount, paymentMethod, razorpayOrderId, razorpayPaymentId } = req.body;
 
-    if (!customerName || !phone || !customerEmail || !address || !items?.length || !totalAmount || !paymentMethod)
+    if (!customerName || !phone || !address || !items?.length || !totalAmount || !paymentMethod)
       return res.status(400).json({ success: false, message: 'Missing required fields' });
+
 
     // ─── Mock Mode: Skip DB validation ────────────────────────────────────────
     if (process.env.MOCK_DATABASE === 'true') {
