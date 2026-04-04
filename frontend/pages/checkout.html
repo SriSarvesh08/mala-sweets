@@ -145,7 +145,12 @@
       const { name, phone, email, address, payment } = getFormData();
       if (!name) return showError('Please enter your full name.');
       if (!phone || !/^[0-9]{10,13}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
-      if (!email || !email.includes('@')) return showError('Please enter a valid email address.');
+      
+      if (document.getElementById('email') && (!email || !email.includes('@'))) {
+        return showError('Please enter a valid email address.');
+      }
+
+
       if (!address) return showError('Please enter your delivery address.');
 
       const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
