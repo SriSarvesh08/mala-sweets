@@ -254,24 +254,31 @@
           description: 'Payment for your pure sweets and ghee order',
           order_id: res.order.id,
           handler: async function (response) {
-            showLoader();
-            // Verify payment
-            await apiFetch('/payment/verify', {
-              method: 'POST',
-              body: JSON.stringify(response)
-            });
-            // Save order
-            const orderRes = await apiFetch('/orders', {
-              method: 'POST',
-              body: JSON.stringify({
-                ...payload,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpayPaymentId: response.razorpay_payment_id
-              })
-            });
-            hideLoader();
-            finalizeOrder();
-            window.location.href = `success.html?orderId=${orderRes.order._id}&paid=true`;
+            try {
+              showLoader();
+              // Verify payment
+              await apiFetch('/payment/verify', {
+                method: 'POST',
+                body: JSON.stringify(response)
+              });
+              // Save order
+              const orderRes = await apiFetch('/orders', {
+                method: 'POST',
+                body: JSON.stringify({
+                  ...payload,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpayPaymentId: response.razorpay_payment_id
+                })
+              });
+              hideLoader();
+              finalizeOrder();
+              window.location.href = `success.html?orderId=${orderRes.order._id}&paid=true`;
+            } catch (err) {
+              hideLoader();
+              console.error('[Razorpay Handler Error]', err);
+              showError('Payment succeeded but order saving failed: ' + err.message + '. Please contact support.');
+              // Ensure order is placed as COD fallback or notify them
+            }
           },
           prefill: {
             name: payload.customerName,
