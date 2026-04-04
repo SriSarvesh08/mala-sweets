@@ -131,13 +131,14 @@
 
     function getFormData() {
       return {
-        name: document.getElementById('name').value.trim(),
-        phone: document.getElementById('phone').value.trim(),
-        email: document.getElementById('email').value.trim(),
-        address: document.getElementById('address').value.trim(),
-        payment: document.querySelector('input[name="payment"]:checked').value
+        name: document.getElementById('name')?.value.trim() || '',
+        phone: document.getElementById('phone')?.value.trim() || '',
+        email: document.getElementById('email')?.value.trim() || '',
+        address: document.getElementById('address')?.value.trim() || '',
+        payment: document.querySelector('input[name="payment"]:checked')?.value || 'cod'
       };
     }
+
 
     async function placeOrder() {
       hideError();
