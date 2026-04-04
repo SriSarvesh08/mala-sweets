@@ -49,7 +49,7 @@ async function sendOrderEmail(order) {
           <table style="width:100%;margin-bottom:20px;font-size:14px;color:#444;">
             <tr><td style="padding:5px 0;width:30%;">Phone:</td><td style="font-weight:bold;">${order.phone}</td></tr>
             <tr><td style="padding:5px 0;">Address:</td><td>${order.address}</td></tr>
-            <tr><td style="padding:5px 0;">Payment:</td><td style="font-weight:bold;color:${order.paymentMethod === 'cod' ? '#d84315' : '#2e7d32'};">${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid Online (Razorpay)'}</td></tr>
+            <tr><td style="padding:5px 0;">Payment:</td><td style="font-weight:bold;color:${order.paymentMethod === 'cod' ? '#d84315' : '#2e7d32'};">${order.paymentMethod === 'cod' ? 'Cash on Delivery' : 'Paid Online'}</td></tr>
           </table>
 
           <h3 style="color:#8D6E63;border-bottom:1px solid #eee;padding-bottom:10px;font-size:16px;">Your Items</h3>
