@@ -45,9 +45,9 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7
 
 // ─── Serve Frontend Static Files ──────────────────────────────────────────────
 const frontendPath = path.join(__dirname, '..', 'frontend');
-app.use('/css', express.static(path.join(frontendPath, 'css'), { maxAge: isProduction ? '30d' : 0 }));
-app.use('/js', express.static(path.join(frontendPath, 'js'), { maxAge: isProduction ? '30d' : 0 }));
-app.use('/pages', express.static(path.join(frontendPath, 'pages'), { maxAge: isProduction ? '1d' : 0 }));
+app.use('/css', express.static(path.join(frontendPath, 'css'), { maxAge: isProduction ? '7d' : 0 }));
+app.use('/js', express.static(path.join(frontendPath, 'js'), { maxAge: 0, etag: true })); // No cache for JS — ensures latest code
+app.use('/pages', express.static(path.join(frontendPath, 'pages'), { maxAge: 0, etag: true })); // No cache for HTML pages
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 const isMockMode = process.env.MOCK_DATABASE === 'true';

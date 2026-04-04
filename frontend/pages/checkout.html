@@ -36,15 +36,15 @@
           <div class="form-group">
             <label>Payment Method *</label>
             <div class="payment-options">
-              <label class="payment-option selected" id="razorpayOption">
-                <input type="radio" name="payment" value="razorpay" checked onchange="selectPayment(this)" />
+              <label class="payment-option" id="razorpayOption">
+                <input type="radio" name="payment" value="razorpay" onchange="selectPayment(this)" />
                 <div>
                   <div class="payment-option-label">💳 Razorpay</div>
                   <div class="payment-option-sub">UPI, Cards, Net Banking</div>
                 </div>
               </label>
-              <label class="payment-option" id="codOption">
-                <input type="radio" name="payment" value="cod" onchange="selectPayment(this)" />
+              <label class="payment-option selected" id="codOption">
+                <input type="radio" name="payment" value="cod" checked onchange="selectPayment(this)" />
                 <div>
                   <div class="payment-option-label">💵 Cash on Delivery</div>
                   <div class="payment-option-sub">Pay when order arrives</div>
@@ -141,49 +141,64 @@
 
 
     async function placeOrder() {
-      hideError();
-      const { name, phone, email, address, payment } = getFormData();
-      if (!name) return showError('Please enter your full name.');
-      if (!phone || !/^\+?[0-9]{10,14}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
+      try {
+        console.log('[Checkout] placeOrder() called');
+        hideError();
+        const { name, phone, email, address, payment } = getFormData();
+        console.log('[Checkout] Form data:', { name, phone, email: email ? '***' : '(empty)', address: address ? '✓' : '✗', payment });
 
-      
-      if (document.getElementById('email') && (!email || !email.includes('@'))) {
-        return showError('Please enter a valid email address.');
+        if (!name) return showError('Please enter your full name.');
+        if (!phone || !/^\+?[0-9]{10,14}$/.test(phone.replace(/\s/g, ''))) return showError('Please enter a valid 10-digit phone number.');
+
+        if (document.getElementById('email') && (!email || !email.includes('@'))) {
+          return showError('Please enter a valid email address.');
+        }
+
+        if (!address) return showError('Please enter your delivery address.');
+
+        if (!currentItems || !currentItems.length) {
+          return showError('Your cart is empty. Please add items before ordering.');
+        }
+
+        const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
+        const total = sub;
+        console.log('[Checkout] Total:', total, 'Items:', currentItems.length);
+
+        const btn = document.getElementById('placeOrderBtn');
+        btn.disabled = true;
+        btn.textContent = 'Processing...';
+
+        const orderPayload = {
+          customerName: name,
+          phone,
+          customerEmail: email,
+          address,
+          items: currentItems.map(i => ({ 
+            productId: i.originalId || i._id, 
+            name: `${i.name} (${i.weight || '1kg'})`, 
+            price: i.price, 
+            quantity: i.quantity || 1 
+          })),
+          totalAmount: total,
+          paymentMethod: payment
+        };
+
+        console.log('[Checkout] Payment method:', payment);
+
+        if (payment === 'razorpay') {
+          await handleRazorpay(orderPayload, total);
+        } else {
+          await handleCOD(orderPayload);
+        }
+
+        btn.disabled = false;
+        btn.textContent = 'Place Order →';
+      } catch (err) {
+        console.error('[Checkout] Unhandled error in placeOrder:', err);
+        showError('Something went wrong: ' + err.message);
+        const btn = document.getElementById('placeOrderBtn');
+        if (btn) { btn.disabled = false; btn.textContent = 'Place Order →'; }
       }
-
-
-      if (!address) return showError('Please enter your delivery address.');
-
-      const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
-      const total = sub;
-
-      const btn = document.getElementById('placeOrderBtn');
-      btn.disabled = true;
-      btn.textContent = 'Processing...';
-
-      const orderPayload = {
-        customerName: name,
-        phone,
-        customerEmail: email,
-        address,
-        items: currentItems.map(i => ({ 
-          productId: i.originalId || i._id, 
-          name: `${i.name} (${i.weight || '1kg'})`, 
-          price: i.price, 
-          quantity: i.quantity || 1 
-        })),
-        totalAmount: total,
-        paymentMethod: payment
-      };
-
-      if (payment === 'razorpay') {
-        await handleRazorpay(orderPayload, total);
-      } else {
-        await handleCOD(orderPayload);
-      }
-
-      btn.disabled = false;
-      btn.textContent = 'Place Order →';
     }
 
     async function handleCOD(payload) {
@@ -209,12 +224,14 @@
 
     async function handleRazorpay(payload, total) {
       try {
+        console.log('[Checkout] handleRazorpay: creating order...');
         showLoader();
         const res = await apiFetch('/payment/create-order', {
           method: 'POST',
           body: JSON.stringify({ amount: total })
         });
         hideLoader();
+        console.log('[Checkout] Razorpay order created, opening modal...');
 
         const options = {
           key: res.key,
@@ -242,7 +259,6 @@
             hideLoader();
             finalizeOrder();
             window.location.href = `success.html?orderId=${orderRes.order._id}&paid=true`;
-
           },
           prefill: {
             name: payload.customerName,
@@ -262,10 +278,15 @@
         rzp.open();
       } catch (e) {
         hideLoader();
-        showError('Razorpay not available. Please use Cash on Delivery. (' + e.message + ')');
+        console.warn('[Checkout] Razorpay failed, auto-falling back to COD:', e.message);
+        // Auto-switch UI to COD
+        document.querySelector('input[value="cod"]').checked = true;
         document.querySelector('input[value="cod"]').click();
         document.getElementById('codOption').classList.add('selected');
         document.getElementById('razorpayOption').classList.remove('selected');
+        // Automatically place order as COD instead of making user click again
+        payload.paymentMethod = 'cod';
+        await handleCOD(payload);
       }
     }
 
