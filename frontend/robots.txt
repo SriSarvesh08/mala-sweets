@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /pages/admin.html
+Disallow: /pages/admin-dashboard.html
+Disallow: /pages/success.html
+
+Sitemap: https://mala-sweets.onrender.com/sitemap.xml

@@ -110,10 +110,9 @@
       `).join('');
 
       const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
-      const delivery = sub >= 999 ? 0 : 60;
       document.getElementById('subtotalVal').textContent = '₹' + sub;
-      document.getElementById('deliveryVal').textContent = delivery === 0 ? 'FREE' : '₹' + delivery;
-      document.getElementById('totalVal').textContent = '₹' + (sub + delivery);
+      document.getElementById('deliveryVal').textContent = 'FREE';
+      document.getElementById('totalVal').textContent = '₹' + sub;
     }
 
     function selectPayment(radio) {
@@ -146,8 +145,7 @@
       if (!address) return showError('Please enter your delivery address.');
 
       const sub = currentItems.reduce((acc, i) => acc + (i.price * (i.quantity || 1)), 0);
-      const delivery = sub >= 999 ? 0 : 60;
-      const total = sub + delivery;
+      const total = sub;
 
       const btn = document.getElementById('placeOrderBtn');
       btn.disabled = true;

@@ -122,8 +122,9 @@ router.post('/', async (req, res) => {
       });
     }
 
-    const deliveryCharge = calculatedSubtotal >= 999 ? 0 : 60;
-    const finalTotal = calculatedSubtotal + deliveryCharge;
+    const deliveryCharge = 0;
+    const finalTotal = calculatedSubtotal;
+
 
     // Optional: Log the difference if someone tried to cheat
     if (Math.abs(finalTotal - totalAmount) > 1) {

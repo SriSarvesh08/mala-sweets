@@ -58,10 +58,8 @@
         <div class="cart-items">${itemsHtml}</div>
         <div class="cart-summary">
           <h3>Order Summary</h3>
-          <div class="summary-row"><span>Subtotal</span><span>₹${total}</span></div>
-          <div class="summary-row"><span>Delivery</span><span>${delivery === 0 ? '<span style="color:var(--success)">FREE</span>' : '₹' + delivery}</span></div>
-          ${delivery === 0 ? '' : '<div style="font-size:.8rem;color:var(--gold-dark);padding:4px 0;">🎁 Add ₹' + (999 - total) + ' more for free delivery!</div>'}
-          <div class="summary-row total"><span>Total Amount</span><span>₹${total + delivery}</span></div>
+          <div class="summary-row"><span>Delivery</span><span style="color:var(--success)">FREE</span></div>
+          <div class="summary-row total"><span>Total Amount</span><span>₹${total}</span></div>
           <button class="btn btn-primary btn-full" style="margin-top:20px;" onclick="window.location.href='checkout.html'">
             Proceed to Checkout →
           </button>
