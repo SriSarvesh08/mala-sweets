@@ -1,5 +1,5 @@
 /* ===================================================
-   SS DAIRY PRODUCTS — Global Styles
+   Mala Sweets and Ghee — Global Styles
    Earthy palette: cream, brown, gold
    =================================================== */
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700;900&family=Lato:wght@300;400;700&display=swap');
@@ -591,6 +591,33 @@ footer h4 { color: var(--gold); font-family: 'Lato', sans-serif; font-size: .8re
 .tag-warning { background: #fff8e1; color: #f57f17; }
 .tag-error { background: #fce4ec; color: #c62828; }
 .tag-info { background: #e3f2fd; color: #1565c0; }
+
+/* ─── Animations ─────────────────────────────────── */
+@keyframes fadeInUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards;
+}
+
+.feature-card, .product-card, .section-header {
+  animation: fadeInUp 0.8s ease forwards;
+  animation-play-state: paused;
+}
+
+/* We can use JS intersection observer to play these or just play them immediately if we want simple load animations. For simplicity, we'll let them play but stagger them slightly if needed, or just let them fade up natively on scroll if we add observer, but without observer, they just play immediately. Let's just remove the paused state to make them play on load. */
+.feature-card, .product-card, .section-header {
+  animation-play-state: running;
+}
 
 /* ─── Responsive ─────────────────────────────────── */
 @media (max-width: 768px) {

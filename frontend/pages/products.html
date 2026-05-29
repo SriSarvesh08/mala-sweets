@@ -85,9 +85,9 @@
       grid.innerHTML = filtered.map(p => {
         const id = p._id;
         return `
-        <div class="product-card" id="card-${id}">
+        <div class="product-card fade-in-up" id="card-${id}">
           <div class="product-img-wrap">
-            <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=600&q=80'}" alt="${p.name}" loading="lazy" />
+            <img src="${p.imageUrl || '/assets/images/pure_cow_ghee_1780047554501.png'}" alt="${p.name}" loading="lazy" />
             ${p.featured ? '<span class="product-badge">⭐ Popular</span>' : ''}
             ${p.stock <= 0 ? '<div class="out-of-stock-overlay">Out of Stock</div>' : ''}
           </div>

@@ -16,8 +16,8 @@
   <section class="hero">
     <div class="carousel-container" id="carousel">
       <div class="carousel-slide">
-        <img src="https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=1400&q=80" alt="Pure Cow Ghee" loading="eager" />
-        <div class="carousel-content">
+        <img src="/assets/images/pure_cow_ghee_1780047554501.png" alt="Pure Cow Ghee" loading="eager" />
+        <div class="carousel-content fade-in-up">
           <div class="hero-badge">✦ Artisan Quality ✦</div>
           <h1>100% Pure<br/><em>Homemade Ghee</em></h1>
           <p>Crafted using the ancient Bilona method — rich aroma, golden hue, zero additives.</p>
@@ -25,20 +25,20 @@
         </div>
       </div>
       <div class="carousel-slide">
-        <img src="https://images.unsplash.com/photo-1631451024069-6ba7e74b9d4f?w=1400&q=80" alt="Bilona Ghee" loading="lazy" />
-        <div class="carousel-content">
-          <div class="hero-badge">✦ Traditional Method ✦</div>
-          <h1>From Our Home<br/><em>To Your Table</em></h1>
-          <p>Made fresh every week. Sourced from grass-fed cows. Delivered to your doorstep.</p>
-          <a href="/pages/products.html" class="btn btn-primary">Explore Products →</a>
+        <img src="/assets/images/indian_sweets_1780047568083.png" alt="Traditional Sweets" loading="lazy" />
+        <div class="carousel-content fade-in-up">
+          <div class="hero-badge">✦ Festive Delights ✦</div>
+          <h1>Authentic<br/><em>Laddu &amp; Mysurpak</em></h1>
+          <p>Made fresh every week with our pure ghee. Delivering the sweet taste of tradition to your doorstep.</p>
+          <a href="/pages/products.html" class="btn btn-primary">Explore Sweets →</a>
         </div>
       </div>
       <div class="carousel-slide">
-        <img src="https://images.unsplash.com/photo-1606914501449-5a96b6ce24ca?w=1400&q=80" alt="Ghee Benefits" loading="lazy" />
-        <div class="carousel-content">
-          <div class="hero-badge">✦ Health First ✦</div>
-          <h1>Nourishing &amp;<br/><em>Affordable Ghee</em></h1>
-          <p>Packed with vitamins, healthy fats &amp; the warmth of a traditional kitchen.</p>
+        <img src="/assets/images/bilona_process_1780047626878.png" alt="Bilona Process" loading="lazy" />
+        <div class="carousel-content fade-in-up">
+          <div class="hero-badge">✦ Heritage Method ✦</div>
+          <h1>Traditional<br/><em>Hand-Churned Ghee</em></h1>
+          <p>Packed with vitamins, healthy fats &amp; the warmth of a traditional rural kitchen.</p>
           <a href="/pages/products.html" class="btn btn-primary">Order Today →</a>
         </div>
       </div>
@@ -134,13 +134,30 @@
       current = (n + slides.length) % slides.length;
       document.getElementById('carousel').style.transform = `translateX(-${current * 100}%)`;
       document.querySelectorAll('.dot').forEach((d, i) => d.classList.toggle('active', i === current));
+      
+      // Trigger animation replay for active slide content
+      document.querySelectorAll('.carousel-slide').forEach((slide, i) => {
+        const content = slide.querySelector('.carousel-content');
+        if(i === current) {
+          content.style.animation = 'none';
+          content.offsetHeight; // trigger reflow
+          content.style.animation = 'fadeInUp 0.8s ease forwards';
+        } else {
+          content.style.animation = 'none';
+        }
+      });
     }
 
-    document.getElementById('prevBtn').addEventListener('click', () => goTo(current - 1));
-    document.getElementById('nextBtn').addEventListener('click', () => goTo(current + 1));
+    document.getElementById('prevBtn').addEventListener('click', () => { goTo(current - 1); resetAutoplay(); });
+    document.getElementById('nextBtn').addEventListener('click', () => { goTo(current + 1); resetAutoplay(); });
 
-    const autoplay = setInterval(() => goTo(current + 1), 4500);
+    let autoplay = setInterval(() => goTo(current + 1), 5000);
+    function resetAutoplay() {
+      clearInterval(autoplay);
+      autoplay = setInterval(() => goTo(current + 1), 5000);
+    }
     document.querySelector('.hero').addEventListener('mouseenter', () => clearInterval(autoplay));
+    document.querySelector('.hero').addEventListener('mouseleave', resetAutoplay);
 
     // Featured products
     async function loadFeatured() {
@@ -157,9 +174,9 @@
 
     function productCard(p) {
       return `
-      <div class="product-card">
+      <div class="product-card fade-in-up">
         <div class="product-img-wrap">
-          <img src="${p.imageUrl || 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=600&q=80'}" alt="${p.name}" loading="lazy" />
+          <img src="${p.imageUrl || '/assets/images/pure_cow_ghee_1780047554501.png'}" alt="${p.name}" loading="lazy" />
           ${p.featured ? '<span class="product-badge">⭐ Featured</span>' : ''}
         </div>
         <div class="product-body">

@@ -1,5 +1,5 @@
 // =============================================
-// SS DAIRY — Shared Utilities
+// Mala Sweets and Ghee — Shared Utilities
 // =============================================
 
 // Determine API_BASE dynamically
