@@ -1,27 +1,37 @@
 const express = require('express');
 const router = express.Router();
 const multer = require('multer');
-const path = require('path');
 const Product = require('../models/Product');
 const authMiddleware = require('../middleware/auth');
+const cloudinary = require('cloudinary').v2;
+const { CloudinaryStorage } = require('multer-storage-cloudinary');
 
-// ─── Multer Setup ─────────────────────────────────────────────────────────────
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, path.join(__dirname, '../uploads')),
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
-    cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-  }
+// ─── Cloudinary Config ────────────────────────────────────────────────────────
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key:    process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
 });
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB
-  fileFilter: (req, file, cb) => {
-    const allowed = /jpeg|jpg|png|webp/;
-    if (allowed.test(path.extname(file.originalname).toLowerCase())) cb(null, true);
-    else cb(new Error('Only images allowed'));
-  }
-});
+
+// ─── Multer + Cloudinary Storage ──────────────────────────────────────────────
+// Uses Cloudinary if env vars are set (production), otherwise memory (local dev)
+let upload;
+if (process.env.CLOUDINARY_CLOUD_NAME) {
+  const storage = new CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: 'ss-dairy-products',
+      allowed_formats: ['jpg', 'jpeg', 'png', 'webp'],
+      transformation: [{ width: 800, height: 800, crop: 'limit', quality: 'auto' }]
+    }
+  });
+  upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
+} else {
+  // No Cloudinary → accept the file in memory but don't save it
+  // Admin must use the Image URL field instead when running locally
+  upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 5 * 1024 * 1024 } });
+}
+
 
 // GET /api/products - Public
 router.get('/', async (req, res) => {
@@ -96,7 +106,8 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     const { name, price, description, weight, category, featured, stock } = req.body;
     let imageUrl = req.body.imageUrl || '';
     if (req.file) {
-      imageUrl = `/uploads/${req.file.filename}`; // relative path — Netlify proxies /uploads/*
+      // Cloudinary: req.file.path = full CDN URL (e.g. https://res.cloudinary.com/...)
+      imageUrl = req.file.path || req.file.secure_url || '';
     }
     const product = new Product({ name, price: Number(price), description, weight, category: category || 'ghee', featured: featured === 'true', imageUrl, stock: Number(stock) || 100 });
     await product.save();
@@ -115,7 +126,8 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     const { name, price, description, weight, category, featured, imageUrl: bodyImageUrl, stock } = req.body;
     const update = { name, price: Number(price), description, weight, category: category || 'ghee', featured: featured === 'true', stock: Number(stock) };
     if (req.file) {
-      update.imageUrl = `/uploads/${req.file.filename}`; // relative path — Netlify proxies /uploads/*
+      // Cloudinary: req.file.path = full CDN URL
+      update.imageUrl = req.file.path || req.file.secure_url || '';
     } else if (bodyImageUrl) {
       update.imageUrl = bodyImageUrl;
     }

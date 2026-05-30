@@ -118,6 +118,15 @@
   </section>
 
   <script>
+    const FALLBACK_IMG = '/assets/images/pure_cow_ghee_1780047554501.png';
+
+    function resolveImg(url) {
+      if (!url) return FALLBACK_IMG;
+      if (url.startsWith('http')) return url; // Cloudinary / Unsplash / any CDN
+      if (url.startsWith('/uploads/')) return url; // Netlify proxies to Render
+      return FALLBACK_IMG;
+    }
+
     // Carousel
     let current = 0;
     const slides = document.querySelectorAll('.carousel-slide');
@@ -176,7 +185,11 @@
       return `
       <div class="product-card fade-in-up">
         <div class="product-img-wrap">
-          <img src="${p.imageUrl || '/assets/images/pure_cow_ghee_1780047554501.png'}" alt="${p.name}" loading="lazy" />
+          <img
+            src="${resolveImg(p.imageUrl)}"
+            alt="${p.name}"
+            loading="lazy"
+            onerror="this.onerror=null;this.src='${FALLBACK_IMG}'" />
           ${p.featured ? '<span class="product-badge">⭐ Featured</span>' : ''}
         </div>
         <div class="product-body">
@@ -184,7 +197,7 @@
           <p>${p.description.slice(0, 90)}...</p>
           <div class="product-footer">
             <span class="product-price">₹${p.price}</span>
-            <a href="/pages/products.html" class="btn btn-primary btn-sm" style="text-decoration:none;">Explore Product →</a>
+            <a href="/pages/products.html" class="btn btn-primary btn-sm" style="text-decoration:none;">Explore Product &rarr;</a>
           </div>
         </div>
       </div>`;

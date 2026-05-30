@@ -50,6 +50,16 @@
 
   <script>
     let rawProducts = [];
+    const FALLBACK_IMG = '/assets/images/pure_cow_ghee_1780047554501.png';
+
+    // Resolve any imageUrl to a displayable src
+    // Handles: Cloudinary CDN URLs, Unsplash, empty strings, old Render /uploads/ paths
+    function resolveImg(url) {
+      if (!url) return FALLBACK_IMG;
+      if (url.startsWith('http')) return url; // Cloudinary / Unsplash / any CDN
+      if (url.startsWith('/uploads/')) return url; // Netlify proxies this to Render
+      return FALLBACK_IMG;
+    }
 
     async function loadProducts() {
       try {
@@ -87,7 +97,11 @@
         return `
         <div class="product-card fade-in-up" id="card-${id}">
           <div class="product-img-wrap">
-            <img src="${p.imageUrl || '/assets/images/pure_cow_ghee_1780047554501.png'}" alt="${p.name}" loading="lazy" />
+            <img
+              src="${resolveImg(p.imageUrl)}"
+              alt="${p.name}"
+              loading="lazy"
+              onerror="this.onerror=null;this.src='${FALLBACK_IMG}'" />
             ${p.featured ? '<span class="product-badge">⭐ Popular</span>' : ''}
             ${p.stock <= 0 ? '<div class="out-of-stock-overlay">Out of Stock</div>' : ''}
           </div>
