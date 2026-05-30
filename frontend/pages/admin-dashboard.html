@@ -102,8 +102,16 @@
           <input type="number" id="pPrice" placeholder="499" min="1" />
         </div>
         <div class="form-group">
-          <label>Weight</label>
-          <input type="text" id="pWeight" placeholder="500g" />
+          <label>Weight / Volume</label>
+          <input type="text" id="pWeight" placeholder="500ml or 500g" />
+        </div>
+        <div class="form-group">
+          <label>Category</label>
+          <select id="pCategory" style="padding:10px;border:1.5px solid var(--border);border-radius:8px;width:100%;font-family:inherit;background:#fff;">
+            <option value="ghee">🧈 Ghee (sold in Litres/ml)</option>
+            <option value="sweets">🍬 Sweets (sold in kg/g)</option>
+            <option value="snacks">🥜 Snacks (sold in kg/g)</option>
+          </select>
         </div>
         <div class="form-group">
           <label>In Stock *</label>
@@ -302,6 +310,7 @@
       document.getElementById('pName').value = '';
       document.getElementById('pPrice').value = '';
       document.getElementById('pWeight').value = '';
+      document.getElementById('pCategory').value = 'ghee';
       document.getElementById('pDesc').value = '';
       document.getElementById('pImageUrl').value = '';
       document.getElementById('pImageFile').value = '';
@@ -319,6 +328,7 @@
       document.getElementById('pName').value = p.name;
       document.getElementById('pPrice').value = p.price;
       document.getElementById('pWeight').value = p.weight || '';
+      document.getElementById('pCategory').value = p.category || 'ghee';
       document.getElementById('pDesc').value = p.description;
       document.getElementById('pImageUrl').value = p.imageUrl || '';
       document.getElementById('pImageFile').value = '';
@@ -359,6 +369,7 @@
       formData.append('price', price);
       formData.append('description', desc);
       formData.append('weight', document.getElementById('pWeight').value);
+      formData.append('category', document.getElementById('pCategory').value);
       formData.append('featured', document.getElementById('pFeatured').checked);
       formData.append('stock', document.getElementById('pStock').value);
       formData.append('imageUrl', document.getElementById('pImageUrl').value.trim());

@@ -20,9 +20,14 @@ const productSchema = new mongoose.Schema({
     type: String,
     default: ''
   },
+  category: {
+    type: String,
+    enum: ['ghee', 'sweets', 'snacks'],
+    default: 'ghee'
+  },
   weight: {
     type: String,
-    default: '500g'
+    default: '500ml'
   },
   stock: {
     type: Number,

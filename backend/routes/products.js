@@ -33,30 +33,33 @@ router.get('/', async (req, res) => {
       products: [
         {
           _id: 'mock1',
-          name: 'Pure Cow Ghee – 500g',
+          name: 'Pure Cow Ghee',
           price: 499,
           description: 'Made from 100% pure cow milk using traditional bilona method. Rich in aroma and golden color.',
-          weight: '500g',
+          category: 'ghee',
+          weight: '500ml',
           imageUrl: 'https://images.unsplash.com/photo-1589985270826-4b7bb135bc9d?w=600&q=80',
           featured: true,
           stock: 50
         },
         {
           _id: 'mock2',
-          name: 'Pure Cow Ghee – 1 Kg',
+          name: 'Premium Bilona Ghee',
           price: 949,
-          description: 'Our bestseller! Double quantity of our premium bilona cow ghee. Perfect for families.',
-          weight: '1kg',
+          description: 'Our bestseller! Premium bilona cow ghee. Perfect for families. Rich aroma, golden colour.',
+          category: 'ghee',
+          weight: '1L',
           imageUrl: 'https://images.unsplash.com/photo-1631451024069-6ba7e74b9d4f?w=600&q=80',
           featured: true,
           stock: 30
         },
         {
           _id: 'mock3',
-          name: 'Buffalo Ghee – 500g',
+          name: 'Buffalo Ghee',
           price: 449,
-          description: 'Rich, creamy buffalo milk ghee with a distinct flavor. Ideal for rotis, rice, and sweets.',
-          weight: '500g',
+          description: 'Rich, creamy buffalo milk ghee with a distinct flavour. Ideal for rotis, rice, and sweets.',
+          category: 'ghee',
+          weight: '500ml',
           imageUrl: 'https://images.unsplash.com/photo-1606914501449-5a96b6ce24ca?w=600&q=80',
           featured: false,
           stock: 25
@@ -90,12 +93,12 @@ router.post('/', authMiddleware, upload.single('image'), async (req, res) => {
     return res.status(201).json({ success: true, message: 'Mock Product Created', product: req.body });
   }
   try {
-    const { name, price, description, weight, featured, stock } = req.body;
+    const { name, price, description, weight, category, featured, stock } = req.body;
     let imageUrl = req.body.imageUrl || '';
     if (req.file) {
-      imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      imageUrl = `/uploads/${req.file.filename}`; // relative path — Netlify proxies /uploads/*
     }
-    const product = new Product({ name, price: Number(price), description, weight, featured: featured === 'true', imageUrl, stock: Number(stock) || 100 });
+    const product = new Product({ name, price: Number(price), description, weight, category: category || 'ghee', featured: featured === 'true', imageUrl, stock: Number(stock) || 100 });
     await product.save();
     res.status(201).json({ success: true, product });
   } catch (err) {
@@ -109,10 +112,10 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
     return res.json({ success: true, message: 'Mock Product Updated', product: req.body });
   }
   try {
-    const { name, price, description, weight, featured, imageUrl: bodyImageUrl, stock } = req.body;
-    const update = { name, price: Number(price), description, weight, featured: featured === 'true', stock: Number(stock) };
+    const { name, price, description, weight, category, featured, imageUrl: bodyImageUrl, stock } = req.body;
+    const update = { name, price: Number(price), description, weight, category: category || 'ghee', featured: featured === 'true', stock: Number(stock) };
     if (req.file) {
-      update.imageUrl = `${req.protocol}://${req.get('host')}/uploads/${req.file.filename}`;
+      update.imageUrl = `/uploads/${req.file.filename}`; // relative path — Netlify proxies /uploads/*
     } else if (bodyImageUrl) {
       update.imageUrl = bodyImageUrl;
     }

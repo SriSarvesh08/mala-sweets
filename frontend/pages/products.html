@@ -99,12 +99,18 @@
             <p>${p.description}</p>
             
             <div class="weight-selector" style="margin: 12px 0;">
-              <label style="font-size: 0.8rem; font-weight: 700; color: var(--brown); display: block; margin-bottom: 4px;">Select Weight:</label>
+              <label style="font-size: 0.8rem; font-weight: 700; color: var(--brown); display: block; margin-bottom: 4px;">Select Size:</label>
+              ${p.category === 'ghee' ? `
+              <select onchange="changeWeight('${id}', this.value, ${p.price})" style="width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit;">
+                <option value="1L">1 Litre</option>
+                <option value="500ml" selected>500 ml</option>
+                <option value="250ml">250 ml</option>
+              </select>` : `
               <select onchange="changeWeight('${id}', this.value, ${p.price})" style="width: 100%; padding: 8px; border-radius: 8px; border: 1.5px solid var(--border); font-family: inherit;">
                 <option value="1kg">1 Kg</option>
-                <option value="500g">500 g</option>
+                <option value="500g" selected>500 g</option>
                 <option value="250g">250 g</option>
-              </select>
+              </select>`}
             </div>
 
             <div class="product-footer" style="display: flex; flex-direction: column; gap: 10px;">
@@ -126,11 +132,17 @@
       `;}).join('');
     }
 
-    function changeWeight(id, weight, basePrice) {
+    function changeWeight(id, size, basePrice) {
       const priceEl = document.getElementById(`price-${id}`);
       let newPrice = basePrice;
-      if (weight === '500g') newPrice = Math.round(basePrice * 0.5);
-      if (weight === '250g') newPrice = Math.round(basePrice * 0.25);
+      // Litre sizes (ghee)
+      if (size === '1L')    newPrice = basePrice;               // base is 1L price
+      if (size === '500ml') newPrice = Math.round(basePrice * 0.5);
+      if (size === '250ml') newPrice = Math.round(basePrice * 0.25);
+      // Weight sizes (sweets/snacks)
+      if (size === '1kg')  newPrice = basePrice;
+      if (size === '500g') newPrice = Math.round(basePrice * 0.5);
+      if (size === '250g') newPrice = Math.round(basePrice * 0.25);
       priceEl.innerText = `₹${newPrice}`;
     }
 

@@ -11,6 +11,14 @@
   status = 200
   force  = true
 
+# ─── Uploads Proxy → Render Backend ──────────────────────────────────────────
+# Product images are stored on Render's /uploads folder — proxy them here.
+[[redirects]]
+  from   = "/uploads/*"
+  to     = "https://mala-sweets.onrender.com/uploads/:splat"
+  status = 200
+  force  = true
+
 # ─── Page Routes (clean URLs) ─────────────────────────────────────────────────
 [[redirects]]
   from   = "/admin"
