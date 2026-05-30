@@ -1,35 +1,45 @@
 [build]
-  command = "echo 'Static site, no build needed'"
-  publish = "frontend"
+  command   = "echo 'Static frontend — no build step needed'"
+  publish   = "frontend"
 
+# ─── API Proxy → Render Backend ───────────────────────────────────────────────
+# All /api/* calls from the Netlify frontend are proxied to Render.
+# This completely avoids CORS issues because the browser sees same-origin requests.
 [[redirects]]
-  from = "/*"
-  to = "/index.html"
+  from   = "/api/*"
+  to     = "https://mala-sweets.onrender.com/api/:splat"
   status = 200
-  condition = {Role = ["admin"]} # Just a generic redirect if needed, but since it's a multi-page app, standard routing works fine.
+  force  = true
 
-# Better redirect for multi-page apps to avoid 404s on clean URLs
+# ─── Page Routes (clean URLs) ─────────────────────────────────────────────────
 [[redirects]]
-  from = "/admin"
-  to = "/pages/admin.html"
-  status = 200
-
-[[redirects]]
-  from = "/cart"
-  to = "/pages/cart.html"
+  from   = "/admin"
+  to     = "/pages/admin.html"
   status = 200
 
 [[redirects]]
-  from = "/products"
-  to = "/pages/products.html"
+  from   = "/cart"
+  to     = "/pages/cart.html"
   status = 200
 
 [[redirects]]
-  from = "/checkout"
-  to = "/pages/checkout.html"
+  from   = "/products"
+  to     = "/pages/products.html"
   status = 200
 
 [[redirects]]
-  from = "/success"
-  to = "/pages/success.html"
+  from   = "/checkout"
+  to     = "/pages/checkout.html"
+  status = 200
+
+[[redirects]]
+  from   = "/success"
+  to     = "/pages/success.html"
+  status = 200
+
+# ─── Fallback (must be last) ──────────────────────────────────────────────────
+# Returns the root index for any unknown path (prevents 404 on refresh)
+[[redirects]]
+  from   = "/*"
+  to     = "/index.html"
   status = 200

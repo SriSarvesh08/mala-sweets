@@ -3,16 +3,16 @@
 // =============================================
 
 // Determine API_BASE dynamically
-// If running on port 5000 (served from Express), use same origin
-// If running on port 5500 (live server), point to port 5000
+// - Local dev (localhost:5000 or 5500) → Express backend on port 5000
+// - Production (Netlify)              → Netlify proxy (/api → Render backend)
 const API_BASE = (() => {
   const host = window.location.hostname;
-  const port = window.location.port;
   if (host === 'localhost' || host === '127.0.0.1') {
-    if (port === '5000') return location.origin + '/api'; // Same-origin (served from Express)
-    return 'http://localhost:5000/api'; // Cross-origin (live server → Express)
+    return 'http://localhost:5000/api'; // Local development
   }
-  return location.origin + '/api'; // Production
+  // Production on Netlify: netlify.toml proxies /api/* → Render backend.
+  // Using a relative path means same-origin — zero CORS issues.
+  return '/api';
 })();
 
 // ─── API Helper ───────────────────────────────────────────────────────────────

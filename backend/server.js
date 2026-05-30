@@ -17,24 +17,23 @@ app.use((req, res, next) => {
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
 const allowedOrigins = [
-  process.env.FRONTEND_URL,
-  'http://localhost:5000',
+  process.env.FRONTEND_URL,          // Netlify production URL (set in Render env vars)
   'http://localhost:5500',
-  'http://127.0.0.1:5500'
+  'http://127.0.0.1:5500',
+  'http://localhost:5000'
 ].filter(Boolean);
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (same-origin, mobile apps, curl)
+    // Allow requests with no origin (curl, mobile, etc.)
     if (!origin) return callback(null, true);
-    if (allowedOrigins.some(allowed => origin.startsWith(allowed) || allowed === '*')) {
+    // Allow any Netlify subdomain
+    if (origin.endsWith('.netlify.app')) return callback(null, true);
+    // Allow explicitly listed origins
+    if (allowedOrigins.some(allowed => origin.startsWith(allowed))) {
       return callback(null, true);
     }
-    // In production on Render, allow the Render URL
-    if (isProduction && origin.endsWith('.onrender.com')) {
-      return callback(null, true);
-    }
-    return callback(null, true); // Allow all for now — tighten in production
+    return callback(null, false);
   },
   credentials: true
 }));
@@ -42,12 +41,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d' }));
-
-// ─── Serve Frontend Static Files ──────────────────────────────────────────────
-const frontendPath = path.join(__dirname, '..', 'frontend');
-app.use('/css', express.static(path.join(frontendPath, 'css'), { maxAge: isProduction ? '7d' : 0 }));
-app.use('/js', express.static(path.join(frontendPath, 'js'), { maxAge: 0, etag: true })); // No cache for JS — ensures latest code
-app.use('/pages', express.static(path.join(frontendPath, 'pages'), { maxAge: 0, etag: true })); // No cache for HTML pages
 
 // ─── Database ─────────────────────────────────────────────────────────────────
 const isMockMode = process.env.MOCK_DATABASE === 'true';
@@ -72,9 +65,9 @@ app.use('/api/products', require('./routes/products'));
 app.use('/api/orders',   require('./routes/orders'));
 app.use('/api/payment',  require('./routes/payment'));
 
-// ─── Frontend Routes ──────────────────────────────────────────────────────────
+// ─── Health Check ─────────────────────────────────────────────────────────────
 app.get('/', (req, res) => {
-  res.sendFile(path.join(frontendPath, 'pages', 'index.html'));
+  res.json({ status: 'SS Dairy Products API is running 🧈', version: '1.0.0', mode: isMockMode ? 'mock' : 'live' });
 });
 
 app.get('/api/health', (req, res) => {
